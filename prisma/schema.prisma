@@ -1,0 +1,144 @@
+// Prisma Schema - Declutter Marketplace
+// This is a 1:1 migration from the Python SQLAlchemy models
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleEnum {
+  admin
+  user
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  UNDER_REVIEW
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum ProductType {
+  Declutter
+  OnlineStore @map("Online Store")
+}
+
+model User {
+  id                   Int       @id @default(autoincrement())
+  fullName             String    @map("full_name") @db.VarChar(256)
+  email                String    @unique @db.VarChar(256)
+  hashedPassword       String    @map("hashed_password") @db.VarChar(512)
+  whatsapp             String?   @db.VarChar(64)
+  houseAddress         String?   @map("house_address") @db.VarChar(512)
+  substituteAddress    String?   @map("substitute_address") @db.VarChar(512)
+  bankAccountNumber    String?   @map("bank_account_number") @db.VarChar(64)
+  bankName             String?   @map("bank_name") @db.VarChar(128)
+  role                 RoleEnum  @default(user)
+  acceptedTermsAt      DateTime? @map("accepted_terms_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime? @updatedAt @map("updated_at")
+
+  // Relationships
+  products      Product[]
+  ordersBought  Order[]     @relation("OrderBuyer")
+  ordersSold    Order[]     @relation("OrderSeller")
+  complaints    Complaint[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Product {
+  id             Int          @id @default(autoincrement())
+  sellerId       Int          @map("seller_id")
+  name           String       @db.VarChar(256)
+  description    String?      @db.Text
+  price          Int
+  condition      String?      @db.VarChar(64)
+  images         Json         @default("[]")
+  videos         Json         @default("[]")
+  locationState  String?      @map("location_state") @db.VarChar(128)
+  deliveryFee    Int          @default(0) @map("delivery_fee")
+  type           String       @default("Declutter") @db.VarChar(32)
+  quantity       Int          @default(1)
+  active         Boolean      @default(true)
+  isDisabled     Boolean      @default(false) @map("is_disabled")
+  mediaUrls      String       @default("") @map("media_urls")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  // Relationships
+  seller User   @relation(fields: [sellerId], references: [id])
+  orders Order[]
+
+  @@map("products")
+}
+
+model Order {
+  id          Int          @id @default(autoincrement())
+  reference   String       @unique @db.VarChar(128)
+  productId   Int          @map("product_id")
+  buyerId     Int          @map("buyer_id")
+  sellerId    Int          @map("seller_id")
+  price       Int
+  deliveryFee Int          @default(0) @map("delivery_fee")
+  status      OrderStatus  @default(PENDING)
+  satisfied   Boolean      @default(false)
+  receivedAt  DateTime?    @map("received_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime?    @updatedAt @map("updated_at")
+
+  // Relationships
+  product    Product      @relation(fields: [productId], references: [id])
+  buyer      User         @relation("OrderBuyer", fields: [buyerId], references: [id])
+  seller     User         @relation("OrderSeller", fields: [sellerId], references: [id])
+  escrow     Escrow?
+  complaints Complaint[]
+
+  @@index([reference])
+  @@map("orders")
+}
+
+model Escrow {
+  id                    Int           @id @default(autoincrement())
+  orderId               Int           @unique @map("order_id")
+  amount                Int
+  currency              String        @default("NGN") @db.VarChar(8)
+  status                EscrowStatus  @default(HELD)
+  gatewayTransactionId  String?       @map("gateway_transaction_id") @db.VarChar(256)
+  createdAt             DateTime      @default(now()) @map("created_at")
+  releasedAt            DateTime?     @map("released_at")
+
+  // Relationships
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("escrows")
+}
+
+model Complaint {
+  id          Int      @id @default(autoincrement())
+  orderId     Int      @map("order_id")
+  buyerId     Int      @map("buyer_id")
+  reasons     Json     @default("[]")
+  description String?  @db.Text
+  images      Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  order Order @relation(fields: [orderId], references: [id])
+  buyer User  @relation(fields: [buyerId], references: [id])
+
+  @@map("complaints")
+}
