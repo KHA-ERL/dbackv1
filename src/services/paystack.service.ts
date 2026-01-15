@@ -25,6 +25,9 @@ export class PaystackService {
 
   constructor(private configService: ConfigService) {
     this.secretKey = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    if (!this.secretKey) {
+      console.error('WARNING: PAYSTACK_SECRET_KEY is not configured');
+    }
   }
 
   async initializeTransaction(
@@ -55,8 +58,19 @@ export class PaystackService {
 
       return response.data.data;
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error('Paystack initialization error:', {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      if (!this.secretKey) {
+        throw new Error('Payment gateway is not configured. Please contact support.');
+      }
+
       throw new Error(
-        `Paystack initialization failed: ${error.response?.data?.message || error.message}`,
+        `Payment initialization failed: ${errorMessage}`,
       );
     }
   }

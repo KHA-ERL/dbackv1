@@ -6,6 +6,8 @@ import {
   Param,
   UseGuards,
   Headers,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { InitializePaymentDto } from './dto/initialize-payment.dto';
@@ -22,11 +24,43 @@ export class PaymentsController {
     @CurrentUser('id') userId: number,
     @Body() initializePaymentDto: InitializePaymentDto,
   ) {
-    return this.paymentsService.initializePayment(
-      userId,
-      initializePaymentDto.productId,
-      initializePaymentDto.callbackUrl,
-    );
+    if (!userId) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: 'Authentication required. Please log in to make a purchase.',
+          error: 'Unauthorized',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    try {
+      return await this.paymentsService.initializePayment(
+        userId,
+        initializePaymentDto.productId,
+        initializePaymentDto.callbackUrl,
+      );
+    } catch (error) {
+      if (error.status === 404) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: 'Product not found. It may have been removed.',
+            error: 'Not Found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: error.message || 'Payment initialization failed. Please try again.',
+          error: 'Payment Error',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   @Get('verify/:reference')
