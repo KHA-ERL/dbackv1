@@ -45,3 +45,6 @@ lerna-debug.log*
 
 # AWS
 .aws/
+
+# Deploy scripts
+deploy.sh

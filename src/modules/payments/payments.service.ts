@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PaystackService } from '../../services/paystack.service';
 import { OrderStatus } from '@prisma/client';
@@ -22,6 +22,11 @@ export class PaymentsService {
 
     if (!product) {
       throw new NotFoundException('Product not found');
+    }
+
+    // Prevent users from buying their own products
+    if (product.sellerId === userId) {
+      throw new BadRequestException('You cannot purchase your own product');
     }
 
     // Get user
