@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Query,
@@ -120,5 +121,21 @@ export class ProductsController {
   @Get(':id')
   async getProduct(@Param('id') id: string) {
     return this.productsService.getProduct(parseInt(id));
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async updateProduct(
+    @CurrentUser('id') userId: number,
+    @Param('id') id: string,
+    @Body()
+    updateData: {
+      price?: number;
+      quantity?: number;
+      outOfStock?: boolean;
+      active?: boolean;
+    },
+  ) {
+    return this.productsService.updateProduct(parseInt(id), userId, updateData);
   }
 }

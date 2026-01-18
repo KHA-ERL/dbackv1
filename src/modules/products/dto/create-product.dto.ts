@@ -24,6 +24,12 @@ export class CreateProductDto {
   condition?: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  conditionRating?: number;
+
+  @IsOptional()
   @IsString()
   locationState?: string;
 

@@ -63,22 +63,24 @@ model User {
 }
 
 model Product {
-  id             Int          @id @default(autoincrement())
-  sellerId       Int          @map("seller_id")
-  name           String       @db.VarChar(256)
-  description    String?      @db.Text
-  price          Int
-  condition      String?      @db.VarChar(64)
-  images         Json         @default("[]")
-  videos         Json         @default("[]")
-  locationState  String?      @map("location_state") @db.VarChar(128)
-  deliveryFee    Int          @default(0) @map("delivery_fee")
-  type           String       @default("Declutter") @db.VarChar(32)
-  quantity       Int          @default(1)
-  active         Boolean      @default(true)
-  isDisabled     Boolean      @default(false) @map("is_disabled")
-  mediaUrls      String       @default("") @map("media_urls")
-  createdAt      DateTime     @default(now()) @map("created_at")
+  id              Int          @id @default(autoincrement())
+  sellerId        Int          @map("seller_id")
+  name            String       @db.VarChar(256)
+  description     String?      @db.Text
+  price           Int
+  condition       String?      @db.VarChar(64)
+  conditionRating Int?         @map("condition_rating") @db.SmallInt // 0-10 seller rating
+  images          Json         @default("[]")
+  videos          Json         @default("[]")
+  locationState   String?      @map("location_state") @db.VarChar(128)
+  deliveryFee     Int          @default(0) @map("delivery_fee")
+  type            String       @default("Declutter") @db.VarChar(32)
+  quantity        Int          @default(1)
+  active          Boolean      @default(true)
+  isDisabled      Boolean      @default(false) @map("is_disabled")
+  outOfStock      Boolean      @default(false) @map("out_of_stock") // For Online Store items
+  mediaUrls       String       @default("") @map("media_urls")
+  createdAt       DateTime     @default(now()) @map("created_at")
 
   // Relationships
   seller User   @relation(fields: [sellerId], references: [id])

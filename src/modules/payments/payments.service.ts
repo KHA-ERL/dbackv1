@@ -29,6 +29,40 @@ export class PaymentsService {
       throw new BadRequestException('You cannot purchase your own product');
     }
 
+    // Check if product is out of stock (for Online Store items)
+    if (product.type === 'Online Store' && (product as any).outOfStock) {
+      throw new BadRequestException('This product is currently out of stock');
+    }
+
+    // For Declutter items, check if there's already a paid order
+    if (product.type === 'Declutter') {
+      const existingPaidOrder = await this.prisma.order.findFirst({
+        where: {
+          productId: product.id,
+          status: {
+            in: [
+              OrderStatus.PAID,
+              OrderStatus.PROCESSING,
+              OrderStatus.SHIPPED,
+              OrderStatus.DELIVERED,
+              OrderStatus.COMPLETED,
+            ],
+          },
+        },
+      });
+
+      if (existingPaidOrder) {
+        throw new BadRequestException(
+          'This item has already been sold. Declutter items can only be purchased once.',
+        );
+      }
+    }
+
+    // For Online Store items, check quantity
+    if (product.type === 'Online Store' && product.quantity <= 0) {
+      throw new BadRequestException('This product is out of stock');
+    }
+
     // Get user
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

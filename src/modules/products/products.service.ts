@@ -24,6 +24,7 @@ export class ProductsService {
         description: createProductDto.description || '',
         price: createProductDto.price,
         condition: createProductDto.condition || '',
+        conditionRating: createProductDto.conditionRating ?? null,
         locationState: createProductDto.locationState || '',
         deliveryFee: createProductDto.deliveryFee || 0,
         type: createProductDto.type,
@@ -109,5 +110,60 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  async updateProduct(
+    productId: number,
+    userId: number,
+    updateData: {
+      price?: number;
+      quantity?: number;
+      outOfStock?: boolean;
+      active?: boolean;
+    },
+  ) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    if (product.sellerId !== userId) {
+      throw new NotFoundException('You can only update your own products');
+    }
+
+    const dataToUpdate: any = {};
+
+    if (updateData.price !== undefined) {
+      dataToUpdate.price = updateData.price;
+    }
+
+    if (updateData.quantity !== undefined && product.type === 'Online Store') {
+      dataToUpdate.quantity = updateData.quantity;
+    }
+
+    if (updateData.outOfStock !== undefined && product.type === 'Online Store') {
+      dataToUpdate.outOfStock = updateData.outOfStock;
+    }
+
+    if (updateData.active !== undefined) {
+      dataToUpdate.active = updateData.active;
+    }
+
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: dataToUpdate,
+      include: {
+        seller: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
   }
 }
