@@ -13,6 +13,7 @@ import { WebSocketModule } from './modules/websocket/websocket.module';
 
 // Tasks
 import { EscrowAutoConfirmTask } from './tasks/escrow-auto-confirm.task';
+import { PendingOrderCancelTask } from './tasks/pending-order-cancel.task';
 
 @Module({
   imports: [
@@ -34,6 +35,6 @@ import { EscrowAutoConfirmTask } from './tasks/escrow-auto-confirm.task';
     PaymentsModule,
     WebSocketModule,
   ],
-  providers: [EscrowAutoConfirmTask],
+  providers: [EscrowAutoConfirmTask, PendingOrderCancelTask],
 })
 export class AppModule {}

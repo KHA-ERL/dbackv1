@@ -23,6 +23,7 @@ enum OrderStatus {
   DELIVERED
   COMPLETED
   UNDER_REVIEW
+  CANCELLED
 }
 
 enum EscrowStatus {
