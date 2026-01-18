@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationGateway } from '../modules/websocket/websocket.gateway';
@@ -12,7 +12,7 @@ export class PendingOrderCancelTask {
 
   constructor(
     private prisma: PrismaService,
-    private notificationGateway: NotificationGateway,
+    @Optional() private notificationGateway?: NotificationGateway,
   ) {}
 
   // Run every 30 minutes
@@ -54,12 +54,14 @@ export class PendingOrderCancelTask {
 
         this.logger.log(`Cancelled pending order ${order.id} (reference: ${order.reference})`);
 
-        // Send WebSocket notification to buyer
-        this.notificationGateway.notifyOrderUpdate(order.id, {
-          type: 'ORDER_CANCELLED',
-          order_id: order.id,
-          message: 'Order cancelled due to payment timeout (12 hours)',
-        });
+        // Send WebSocket notification to buyer (if gateway is available)
+        if (this.notificationGateway) {
+          this.notificationGateway.notifyOrderUpdate(order.id, {
+            type: 'ORDER_CANCELLED',
+            order_id: order.id,
+            message: 'Order cancelled due to payment timeout (12 hours)',
+          });
+        }
       }
 
       this.logger.log('Pending order cancellation task completed');
