@@ -109,7 +109,10 @@ export class PaymentsService {
 
     return {
       success: true,
+      status: 'success',
+      verified: true,
       order,
+      orderId: order.id,
       message: 'Payment verified and funds held in escrow',
     };
   }
