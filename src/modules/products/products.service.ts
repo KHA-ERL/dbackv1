@@ -95,7 +95,8 @@ export class ProductsService {
     });
   }
 
-  async getProduct(productId: number) {
+  async getProduct(productId: number, requestingUserId?: number) {
+    // Get full seller info for checking permissions
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -104,6 +105,9 @@ export class ProductsService {
             id: true,
             fullName: true,
             email: true,
+            whatsapp: true,
+            houseAddress: true,
+            substituteAddress: true,
           },
         },
       },
@@ -113,7 +117,43 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    // Check if requesting user has a paid order for this product (or any product from this seller)
+    let hasPaidOrder = false;
+    if (requestingUserId) {
+      const paidOrder = await this.prisma.order.findFirst({
+        where: {
+          buyerId: requestingUserId,
+          productId: productId,
+          status: {
+            in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'],
+          },
+        },
+      });
+      hasPaidOrder = !!paidOrder;
+    }
+
+    // Build seller info based on payment status
+    // Always show: name and location (from product)
+    // Only after payment: email, whatsapp, addresses
+    const sellerInfo: any = {
+      id: product.seller.id,
+      fullName: product.seller.fullName,
+    };
+
+    if (hasPaidOrder) {
+      // User has paid - show all contact details
+      sellerInfo.email = product.seller.email;
+      sellerInfo.whatsapp = product.seller.whatsapp;
+      sellerInfo.houseAddress = product.seller.houseAddress;
+      sellerInfo.substituteAddress = product.seller.substituteAddress;
+    }
+
+    return {
+      ...product,
+      seller: sellerInfo,
+      // Flag to tell frontend if contact details are available
+      sellerContactVisible: hasPaidOrder,
+    };
   }
 
   async updateProduct(

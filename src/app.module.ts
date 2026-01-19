@@ -10,6 +10,8 @@ import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WebSocketModule } from './modules/websocket/websocket.module';
+import { CartModule } from './modules/cart/cart.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
 
 // Tasks
 import { EscrowAutoConfirmTask } from './tasks/escrow-auto-confirm.task';
@@ -34,6 +36,8 @@ import { PendingOrderCancelTask } from './tasks/pending-order-cancel.task';
     OrdersModule,
     PaymentsModule,
     WebSocketModule,
+    CartModule,
+    WishlistModule,
   ],
   providers: [EscrowAutoConfirmTask, PendingOrderCancelTask],
 })

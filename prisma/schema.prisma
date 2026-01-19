@@ -57,6 +57,8 @@ model User {
   ordersBought  Order[]     @relation("OrderBuyer")
   ordersSold    Order[]     @relation("OrderSeller")
   complaints    Complaint[]
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
 
   @@index([email])
   @@map("users")
@@ -85,6 +87,8 @@ model Product {
   // Relationships
   seller User   @relation(fields: [sellerId], references: [id])
   orders Order[]
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
 
   @@map("products")
 }
@@ -144,4 +148,33 @@ model Complaint {
   buyer User  @relation(fields: [buyerId], references: [id])
 
   @@map("complaints")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int      @map("product_id")
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int      @map("product_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relationships
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
 }

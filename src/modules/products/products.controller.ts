@@ -16,9 +16,9 @@ import { ProductsService } from './products.service';
 import { CloudinaryService } from '../../services/cloudinary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import * as fs from 'fs';
-import * as path from 'path';
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
@@ -119,8 +119,12 @@ export class ProductsController {
   }
 
   @Get(':id')
-  async getProduct(@Param('id') id: string) {
-    return this.productsService.getProduct(parseInt(id));
+  @UseGuards(OptionalJwtAuthGuard)
+  async getProduct(
+    @Param('id') id: string,
+    @CurrentUser('id') userId?: number,
+  ) {
+    return this.productsService.getProduct(parseInt(id), userId);
   }
 
   @Put(':id')
