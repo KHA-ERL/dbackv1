@@ -17,6 +17,10 @@ export class ProductsService {
         ? createProductDto.quantity || 1
         : 1;
 
+    // Accept both camelCase and snake_case from frontend
+    const locationState = createProductDto.locationState || createProductDto.location_state || '';
+    const deliveryFee = createProductDto.deliveryFee || createProductDto.delivery_fee || 0;
+
     return this.prisma.product.create({
       data: {
         sellerId: userId,
@@ -25,8 +29,8 @@ export class ProductsService {
         price: createProductDto.price,
         condition: createProductDto.condition || '',
         conditionRating: createProductDto.conditionRating ?? null,
-        locationState: createProductDto.locationState || '',
-        deliveryFee: createProductDto.deliveryFee || 0,
+        locationState,
+        deliveryFee,
         type: createProductDto.type,
         quantity,
         images: imageUrls,
